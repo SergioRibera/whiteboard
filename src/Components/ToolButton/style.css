@@ -1,0 +1,9 @@
+.size-badge {
+    background-color: royalblue;
+    border-radius: 50%;
+    bottom: 0.7em;
+    position: absolute;
+    right: 0.7em;
+    width: 1.5em;
+    height: 1.5em;
+}
