@@ -1,0 +1,16 @@
+.tool-button {
+    align-items: center;
+    background-color: #f7f7f7;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    margin: 0.3em;
+    padding: 0.5em;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.tool-button:hover {
+    cursor: pointer;
+    background-color: #fcfcfc;
+}
