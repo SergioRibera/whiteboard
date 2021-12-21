@@ -7,16 +7,15 @@ interface ToolButtonProps {
     label?: string;
     icon: JSX.Element;
     sizeBrush?: number;
-    defaultColor?: string;
+    currentColor?: string;
     onClick: () => void;
     onColorChange?: (color: string) => void;
 }
 
-const ToolButton = ({ children, label, icon, sizeBrush, defaultColor, onClick }: ToolButtonProps): JSX.Element => {
+const ToolButton = ({ children, label, icon, sizeBrush, currentColor, onClick }: ToolButtonProps): JSX.Element => {
     // set default color if not set
-    if (!defaultColor)
-        defaultColor = "#fff";
-    const [currentColor, setCurrentColor] = useState(defaultColor);
+    if (!currentColor)
+        currentColor = "#fff";
     return (
         <IconButton
             icon={icon}

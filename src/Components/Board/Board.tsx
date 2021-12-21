@@ -1,19 +1,18 @@
 import { PointerEventHandler, useEffect, useRef, useState } from 'react';
-import { stroke as brush, BrushStrokeResult } from '@disjukr/croquis-js/lib/brush/simple';
+import { getStroke as getSnakeStroke, SnakeState } from '@disjukr/croquis-js/lib/stabilizer/snake';
+import { stroke as brush, defaultBrushConfig, BrushStrokeResult } from '@disjukr/croquis-js/lib/brush/simple';
 
 import './style.css';
 import { getStylusState } from '@disjukr/croquis-js/lib/stylus';
 import { StrokeDrawingContext } from '@disjukr/croquis-js/lib/stroke-protocol';
-
-interface Config {
-    brushSize: number;
-    color: string;
-}
+import { IBrushState } from '../ToolBar/ToolBar';
 
 export interface WindowSize {
     width: number;
     height: number;
 }
+
+const snake = getSnakeStroke(brush);
 
 const useWindowSize = (): WindowSize => {
     const [windowSize, setWindowSize] = useState<WindowSize>({ width: 0, height: 0 });
@@ -26,31 +25,67 @@ const useWindowSize = (): WindowSize => {
     return windowSize;
 }
 
-const Board = () => {
+const useCanvasFadeout = (canvasRef: React.RefObject<HTMLCanvasElement>) => {
+    useEffect(() => {
+        const id = setInterval(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d')!;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }, 50);
+        return () => clearInterval(id);
+    }, []);
+}
+
+const Board = ({ brushConf, event }: { brushConf: IBrushState, event?: string }) => {
+    const { brushSize, brushColor } = brushConf;
     const canvasRef = useRef<HTMLCanvasElement>(null);
     // useCanvasFadeout(canvasRef);
     const windowSize = useWindowSize();
     const [drawingContext, setDrawingContext] = useState<
-        StrokeDrawingContext<any, any, BrushStrokeResult>
+        StrokeDrawingContext<any, SnakeState, BrushStrokeResult>
     >();
-    const [config, setConfig] = useState<Config>(() => ({
-        brushSize: 40,
-        color: '#000',
-    }));
     useEffect(() => {
-        if (!drawingContext?.getState().update) return;
+        if (!drawingContext) return;
         const id = setInterval(drawingContext.getState().update, 10);
         return () => clearInterval(id);
     }, [drawingContext]);
+    // Manage events
+    useEffect(() => {
+        switch (event) {
+            case 'eraseall':
+                const canvas = canvasRef.current;
+                if (canvas) {
+                    const ctx = canvas.getContext('2d')!;
+                    // ctx.globalCompositeOperation = 'destination-out';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                break;
+        }
+    }, []);
     const downHandler: PointerEventHandler = e => {
         const ctx = canvasRef.current!.getContext('2d')!;
-        const brushConfig = {
-            ctx,
-            size: config.brushSize,
-            color: config.color,
-        };
         const stylusState = getStylusState(e.nativeEvent);
-        const drawingContext = brush.down(brushConfig, stylusState);
+        const brushConfig = {
+            ...defaultBrushConfig,
+            ctx,
+            size: brushSize,
+            color: brushColor,
+        };
+        const drawingContext = snake.down(
+            {
+                tailCount: 5,
+                weight: .5,
+                catchUp: true,
+                targetConfig: brushConfig,
+            },
+            stylusState
+        );
         setDrawingContext(drawingContext);
     };
     useEffect(() => {
