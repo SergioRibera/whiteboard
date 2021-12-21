@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import { RiEraserFill, RiMarkPenFill, RiPencilFill, RiSettings4Fill } from 'react-icons/ri';
 import { FaTrash } from 'react-icons/fa';
+import { ChromePicker } from 'react-color';
 import IconButton from '../Base/IconButton/IconButton';
 import ToolButton from '../ToolButton/ToolButton';
 import './style.css';
@@ -11,6 +12,7 @@ interface IResizeBrushProps {
 
 interface IBrushProps {
     onChange: (toolOption: IBrushState) => void;
+    onEvent: (event: string) => void;
 }
 
 interface IChangeBrushColorProps {
@@ -27,27 +29,29 @@ interface IBrushState {
 const ResizeBrush = ({ onResize }: IResizeBrushProps) => {
     const [size, setSize] = useState<number>(12);
 
+    const setState = (size: number) => {
+        setSize(size);
+        onResize(size);
+    };
+
     return (
         <div className="resize-brush-slider">
             <div className="resize-brush-prefab">
                 <div className="resize-brush-prefab-item"
-                    onClick={() => { setSize(5); onResize(5); }} />
+                    onClick={() => setState(5)} />
                 <div className="resize-brush-prefab-item"
-                    onClick={() => { setSize(12); onResize(12); }} />
+                    onClick={() => setState(12)} />
                 <div className="resize-brush-prefab-item"
-                    onClick={() => { setSize(24); onResize(24); }} />
+                    onClick={() => setState(24)} />
                 <div className="resize-brush-prefab-item"
-                    onClick={() => { setSize(32); onResize(32); }} />
+                    onClick={() => setState(32)} />
             </div>
             <input
                 type="range"
                 min="1"
                 max="50"
                 value={size}
-                onChange={(e) => {
-                    setSize(Number(e.target.value));
-                    onResize(Number(e.target.value));
-                }}
+                onChange={(e) => setState(Number(e.target.value))}
             />
         </div>
     );
@@ -59,6 +63,15 @@ const ChangeColor = ({ onChange }: IChangeBrushColorProps) => {
     return (
         <Fragment>
             <div className="color-picker">
+                <ChromePicker
+                    className="color-picker-item"
+                    disableAlpha={true}
+                    color={color}
+                    onChange={(color) => { setColor(color.hex); onChange(color.hex)}}
+                    />
+                    {/*
+                    colors={['#FF6900', '#FCB900', '#7BDCB5', '#00D084', '#8ED1FC', '#0693E3', '#ABB8C3', '#EB144C', '#F78DA7', '#9900EF', '#0065FF', '#FFF600']}
+                    */}
             </div>
         </Fragment>
     );
@@ -69,7 +82,7 @@ const ToolTipContainer = ({ children, showing }: { children?: | React.ReactChild
         <div
             className={`tool-tip-container ${showing ? "tool-tip-container-showing" : ""}`}
             style={{
-                left: showing ? "170%" : "-350px",
+                left: showing ? "170%" : "-550px",
             }}
         >
             {children}
@@ -77,7 +90,7 @@ const ToolTipContainer = ({ children, showing }: { children?: | React.ReactChild
     );
 };
 
-const ToolBar = ({ onChange }: IBrushProps) => {
+const ToolBar = ({ onChange, onEvent }: IBrushProps) => {
     const [showingToolBar] = useState<boolean>(true);
     const [currentBrush, setCurrentBrush] = useState<string>('pencil');
     const [penConf, setPenConf] = useState<IBrushState>({
@@ -105,7 +118,7 @@ const ToolBar = ({ onChange }: IBrushProps) => {
                 <ToolButton
                     icon={<RiPencilFill className="tool-btn-icon" />}
                     sizeBrush={penConf.brushSize}
-                    defaultColor={penConf.brushColor}
+                    currentColor={penConf.brushColor}
                     onClick={() => { setPenConf({ ...penConf, brushShowToolTip: !penConf.brushShowToolTip }) }}
                     onColorChange={() => { }}
                 >
@@ -126,7 +139,7 @@ const ToolBar = ({ onChange }: IBrushProps) => {
                             setEraserConf({ ...eraserConf, brushSize: newSize });
                             onChange(eraserConf);
                         }} />
-                        <div className="btn-eraser-all" onClick={() => { }}>
+                        <div className="btn-eraser-all" onClick={() => onEvent('eraseall')}>
                             <FaTrash />
                         </div>
                     </ToolTipContainer>}
@@ -136,7 +149,7 @@ const ToolBar = ({ onChange }: IBrushProps) => {
                 <ToolButton
                     icon={<RiMarkPenFill className="tool-btn-icon" />}
                     sizeBrush={markConf.brushSize}
-                    defaultColor={markConf.brushColor}
+                    currentColor={markConf.brushColor}
                     onClick={() => { setMarkConf({ ...markConf, brushShowToolTip: !markConf.brushShowToolTip }) }}
                     onColorChange={() => { }}
                 >

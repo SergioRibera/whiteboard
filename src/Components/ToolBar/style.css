@@ -14,8 +14,11 @@
 }
 
 .color-picker {
-    position: absolute;
-    left: 15%;
+    margin-top: 1em;
+}
+.color-picker-item {
+    box-shadow: none !important;
+    margin: 0.5em 0px;
 }
 
 .tool-btn-icon {
